@@ -569,12 +569,30 @@ export default function PreRegistration() {
             </div>
 
             {/* Dev Mode Helper */}
+            {devOtp && (
+              <div className="p-3.5 rounded-2xl bg-violet-50 border border-violet-200 text-center space-y-1 animate-fade-in">
+                <p className="text-[11px] font-bold text-violet-700 uppercase tracking-wider">
+                  Test Access Code: <span className="font-mono text-base font-black text-violet-900 ml-1">{devOtp}</span>
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const digits = devOtp.slice(0, 6).split("");
+                    setOtpValues(digits);
+                  }}
+                  className="text-xs font-bold text-violet-600 hover:text-violet-800 underline cursor-pointer"
+                >
+                  Click to auto-fill code
+                </button>
+              </div>
+            )}
 
             {errorMsg && (
               <div className="p-3.5 rounded-2xl bg-red-50 border border-red-200 text-red-600 text-xs font-bold text-center">
                 {errorMsg}
               </div>
             )}
+
 
             <form onSubmit={handleVerifyOtp} className="space-y-6">
               {/* 6 Digit Input Boxes */}
