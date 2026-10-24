@@ -303,10 +303,8 @@ www.aimiko.in
     if resend_key:
         try:
             import httpx
-            sender_resend = f"{sender_name} <onboarding@resend.dev>"
-            # If a custom domain is verified in Resend, use contactaimiko@...
-            if smtp_user and "@" in smtp_user and "gmail" not in smtp_user.lower():
-                sender_resend = f"{sender_name} <{smtp_user}>"
+            sender_resend = f"{sender_name} <verify@aimiko.in>"
+
 
             resp = httpx.post(
                 "https://api.resend.com/emails",
