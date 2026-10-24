@@ -85,7 +85,9 @@ class Settings(BaseSettings):
     llm_api_key: str = ""
     llm_default_model: str = "gpt-4o-mini"
 
-    # --- SMTP Email Configuration (e.g. Gmail App Password) ---
+    # --- Transactional Email Configuration (HTTPS Port 443 + SMTP Fallback) ---
+    resend_api_key: str = ""
+    brevo_api_key: str = ""
     smtp_host: str = "smtp.gmail.com"
     smtp_port: int = 587
     smtp_user: str = ""

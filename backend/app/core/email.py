@@ -16,18 +16,20 @@ logger = logging.getLogger(__name__)
 
 def send_preregistration_otp(to_email: str, recipient_name: str, otp_code: str) -> bool:
     """Send branded AIMIKO Early Access OTP verification email via Gmail SMTP matching the official spec."""
-    smtp_user = settings.smtp_user.strip()
-    smtp_password = settings.smtp_password.strip().replace(" ", "")
+    smtp_user = (getattr(settings, "smtp_user", None) or "").strip()
+    smtp_password = (getattr(settings, "smtp_password", None) or "").strip().replace(" ", "")
+    resend_key = (getattr(settings, "resend_api_key", None) or "").strip()
+    brevo_key = (getattr(settings, "brevo_api_key", None) or "").strip()
 
-    if not smtp_user or not smtp_password:
+    if not (resend_key or brevo_key or (smtp_user and smtp_password)):
         logger.warning(
-            f"[EMAIL SERVICE] SMTP not configured. OTP for {to_email}: {otp_code}. "
-            "To send real emails, set SMTP_USER and SMTP_PASSWORD in backend/.env"
+            f"[EMAIL SERVICE] No email service configured. OTP for {to_email}: {otp_code}. "
+            "Set RESEND_API_KEY, BREVO_API_KEY, or SMTP credentials."
         )
         return False
 
     sender_name = settings.smtp_from_name or "AIMIKO"
-    from_header = f"{sender_name} <{smtp_user}>"
+    from_header = f"{sender_name} <{smtp_user or 'contactaimiko@gmail.com'}>"
     subject = f"{otp_code} is your AIMIKO verification code"
 
     display_name = recipient_name.strip() if recipient_name and recipient_name.strip() else "Friend"
@@ -294,16 +296,89 @@ www.aimiko.in
     msg.attach(MIMEText(plain_text, "plain", "utf-8"))
     msg.attach(MIMEText(html_body, "html", "utf-8"))
 
-    try:
-        server = smtplib.SMTP(settings.smtp_host, settings.smtp_port, timeout=12)
-        server.ehlo()
-        server.starttls()
-        server.ehlo()
-        server.login(smtp_user, smtp_password)
-        server.sendmail(smtp_user, [to_email], msg.as_string())
-        server.quit()
-        logger.info(f"[EMAIL SERVICE] Official Early Access verification email delivered to {to_email}")
-        return True
-    except Exception as exc:
-        logger.error(f"[EMAIL SERVICE] Delivery failed to {to_email}: {exc}")
-        return False
+    # ─────────────────────────────────────────────────────────────
+    # Tier 1: Resend HTTPS API (Port 443 — Unblocked on Render)
+    # ─────────────────────────────────────────────────────────────
+    resend_key = (getattr(settings, "resend_api_key", None) or "").strip()
+    if resend_key:
+        try:
+            import httpx
+            sender_resend = f"{sender_name} <onboarding@resend.dev>"
+            # If a custom domain is verified in Resend, use contactaimiko@...
+            if smtp_user and "@" in smtp_user and "gmail" not in smtp_user.lower():
+                sender_resend = f"{sender_name} <{smtp_user}>"
+
+            resp = httpx.post(
+                "https://api.resend.com/emails",
+                headers={
+                    "Authorization": f"Bearer {resend_key}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "from": sender_resend,
+                    "to": [to_email],
+                    "subject": subject,
+                    "html": html_body,
+                    "text": plain_text,
+                },
+                timeout=10.0,
+            )
+            if resp.status_code in (200, 201):
+                logger.info(f"[EMAIL SERVICE - RESEND HTTPS] Verification email sent to {to_email}")
+                return True
+            else:
+                logger.warning(f"[EMAIL SERVICE - RESEND] Error {resp.status_code}: {resp.text}")
+        except Exception as exc:
+            logger.warning(f"[EMAIL SERVICE - RESEND FAILED] {exc}. Attempting next tier...")
+
+    # ─────────────────────────────────────────────────────────────
+    # Tier 2: Brevo HTTPS API (Port 443 — Allows contactaimiko@gmail.com)
+    # ─────────────────────────────────────────────────────────────
+    brevo_key = (getattr(settings, "brevo_api_key", None) or "").strip()
+    if brevo_key:
+        try:
+            import httpx
+            brevo_sender = smtp_user if smtp_user else "contactaimiko@gmail.com"
+            resp = httpx.post(
+                "https://api.brevo.com/v3/smtp/email",
+                headers={
+                    "api-key": brevo_key,
+                    "Content-Type": "application/json",
+                    "accept": "application/json",
+                },
+                json={
+                    "sender": {"name": sender_name, "email": brevo_sender},
+                    "to": [{"email": to_email, "name": display_name}],
+                    "subject": subject,
+                    "htmlContent": html_body,
+                    "textContent": plain_text,
+                },
+                timeout=10.0,
+            )
+            if resp.status_code in (200, 201):
+                logger.info(f"[EMAIL SERVICE - BREVO HTTPS] Verification email sent to {to_email}")
+                return True
+            else:
+                logger.warning(f"[EMAIL SERVICE - BREVO] Error {resp.status_code}: {resp.text}")
+        except Exception as exc:
+            logger.warning(f"[EMAIL SERVICE - BREVO FAILED] {exc}. Attempting next tier...")
+
+    # ─────────────────────────────────────────────────────────────
+    # Tier 3: Gmail SMTP Fallback (Port 587)
+    # ─────────────────────────────────────────────────────────────
+    if smtp_user and smtp_password:
+        try:
+            server = smtplib.SMTP(settings.smtp_host, settings.smtp_port, timeout=12)
+            server.ehlo()
+            server.starttls()
+            server.ehlo()
+            server.login(smtp_user, smtp_password)
+            server.sendmail(smtp_user, [to_email], msg.as_string())
+            server.quit()
+            logger.info(f"[EMAIL SERVICE - SMTP] Verification email delivered to {to_email}")
+            return True
+        except Exception as exc:
+            logger.error(f"[EMAIL SERVICE - SMTP FAILED] {exc}")
+
+    logger.error(f"[EMAIL SERVICE] All email delivery tiers failed or unconfigured for {to_email}")
+    return False
