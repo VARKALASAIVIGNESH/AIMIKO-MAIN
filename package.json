@@ -9,10 +9,7 @@
     "dev:agency": "npm run dev --prefix agency-portal",
     "dev:all": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\" \"npm run dev:agency\"",
     "dev": "npm run dev --prefix frontend",
-    "build:frontend": "npm run build --prefix frontend",
-    "build:agency": "npm run build --prefix agency-portal",
-    "build": "npm run build --prefix frontend && npm run build --prefix agency-portal",
-    "seed": "cd backend && python -m app.seed"
+    "build": "npm run build --prefix frontend"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"
