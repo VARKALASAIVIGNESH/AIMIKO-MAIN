@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "name": "AI Receptionist Deployment",
+    "service": "Voice AI",
+    "description": "After-hours appointment booking agent for three clinics.",
+    "status": "building",
+    "owner_id": 3,
+    "customer_id": 1,
+    "organization_id": 3,
+    "created_at": "2026-10-24T04:47:02.277179",
+    "updated_at": "2026-10-24T04:47:02.277179"
+  },
+  {
+    "id": 2,
+    "name": "Recall Call Automation",
+    "service": "AI Automation",
+    "description": "Automated patient recall and no-show follow-up flows.",
+    "status": "live",
+    "owner_id": 3,
+    "customer_id": 1,
+    "organization_id": 3,
+    "created_at": "2026-10-24T04:47:02.277179",
+    "updated_at": "2026-10-24T04:47:02.277179"
+  }
+]

@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1,
+    "service": "Document AI",
+    "session_id": "demo-1001",
+    "user_id": 3,
+    "organization_id": 3,
+    "actions": 4,
+    "completed": true,
+    "created_at": "2026-10-24T04:47:02.272079"
+  },
+  {
+    "id": 2,
+    "service": "Voice AI",
+    "session_id": "demo-1002",
+    "user_id": 3,
+    "organization_id": 3,
+    "actions": 2,
+    "completed": false,
+    "created_at": "2026-10-24T04:47:02.272079"
+  },
+  {
+    "id": 3,
+    "service": "AI Automation",
+    "session_id": "demo-1003",
+    "user_id": null,
+    "organization_id": null,
+    "actions": 1,
+    "completed": false,
+    "created_at": "2026-10-24T04:47:02.272079"
+  }
+]

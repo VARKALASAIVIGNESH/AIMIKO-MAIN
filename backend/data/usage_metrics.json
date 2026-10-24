@@ -1,0 +1,50 @@
+[
+  {
+    "id": 1,
+    "metric_type": "ai",
+    "service": "Document AI",
+    "action": "chat",
+    "provider": "openai",
+    "model": "gpt-4o-mini",
+    "user_id": 3,
+    "organization_id": 3,
+    "input_tokens": 1500,
+    "output_tokens": 420,
+    "cost_usd": 0.004,
+    "status_code": 200,
+    "duration_ms": 0,
+    "created_at": "2026-10-22T04:47:01.912703"
+  },
+  {
+    "id": 2,
+    "metric_type": "ai",
+    "service": "Voice AI",
+    "action": "call_summary",
+    "provider": "openai",
+    "model": "gpt-4o-mini",
+    "user_id": 3,
+    "organization_id": 3,
+    "input_tokens": 3200,
+    "output_tokens": 610,
+    "cost_usd": 0.008,
+    "status_code": 200,
+    "duration_ms": 0,
+    "created_at": "2026-10-23T04:47:01.912703"
+  },
+  {
+    "id": 3,
+    "metric_type": "api",
+    "service": "AI Automation",
+    "action": "webhook",
+    "provider": "activepieces",
+    "model": "",
+    "user_id": 3,
+    "organization_id": 3,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "cost_usd": 0.0,
+    "status_code": 200,
+    "duration_ms": 340,
+    "created_at": "2026-10-23T22:47:01.912703"
+  }
+]
