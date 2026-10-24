@@ -96,23 +96,24 @@ def send_otp(payload: SendOtpRequest, db: Session = Depends(get_db)):
 
     logger.info(f"[AIMIKO PRE-REGISTRATION] OTP for {email} ({name}): {otp_code}")
 
-    # Send real branded verification email via Gmail SMTP
+    # Send branded verification email via official verified domain
     email_sent = send_preregistration_otp(to_email=email, recipient_name=name, otp_code=otp_code)
-
-    # In dev or until SMTP service is provided, expose dev_otp for seamless testing
-    dev_otp = otp_code if settings.debug or settings.environment == "development" or True else None
-
-    msg = f"Verification code sent to {email}." if email_sent else f"Verification code ready for {email}."
+    if not email_sent:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unable to send verification email. Please check your email address and try again."
+        )
 
     return PreRegisterResponse(
         success=True,
-        message=msg,
+        message=f"Verification code sent to {email}.",
         is_verified=False,
         assigned_pose=reg.assigned_pose,
         name=reg.name,
         email=reg.email,
-        dev_otp=dev_otp,
+        dev_otp=None,
     )
+
 
 
 @router.post("/verify-otp", response_model=PreRegisterResponse)
