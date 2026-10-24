@@ -53,6 +53,6 @@ yarn-error.log*
 Thumbs.db
 
 # Exclude all heavy engines (only pre-registration is pushed)
-engines/
-docker-compose.yml
-docs/
+/engines/
+/docker-compose.yml
+/docs/
