@@ -12,12 +12,22 @@ from app.core.config import settings
 
 db_url = settings.database_url
 
+# Auto-detect whether psycopg (v3) or psycopg2 is available
+_pg_driver = "postgresql+psycopg://"
+try:
+    import psycopg  # noqa: F401
+except ImportError:
+    try:
+        import psycopg2  # noqa: F401
+        _pg_driver = "postgresql+psycopg2://"
+    except ImportError:
+        _pg_driver = "postgresql://"
+
 # Supabase / cloud providers format the scheme as postgres:// or postgresql://
-# In SQLAlchemy 2.0+, explicit driver specification prevents ModuleNotFoundError
 if db_url.startswith("postgres://"):
-    db_url = db_url.replace("postgres://", "postgresql+psycopg2://", 1)
+    db_url = db_url.replace("postgres://", _pg_driver, 1)
 elif db_url.startswith("postgresql://") and not db_url.startswith("postgresql+"):
-    db_url = db_url.replace("postgresql://", "postgresql+psycopg2://", 1)
+    db_url = db_url.replace("postgresql://", _pg_driver, 1)
 
 connect_args = {}
 engine_kwargs = {

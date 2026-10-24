@@ -13,15 +13,21 @@ from app.seed import seed
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    Base.metadata.create_all(bind=engine)
-    db = SessionLocal()
     try:
-        from app.services.json_store import JSONStore
-        JSONStore.load_all(db)
-        seed(db)
-        JSONStore.dump_all(db)
-    finally:
-        db.close()
+        Base.metadata.create_all(bind=engine)
+        db = SessionLocal()
+        try:
+            from app.services.json_store import JSONStore
+            JSONStore.load_all(db)
+            seed(db)
+            JSONStore.dump_all(db)
+        finally:
+            db.close()
+        print("[AIMIKO STARTUP] Database and seed initialization complete.", flush=True)
+    except Exception as exc:
+        import traceback
+        print(f"[AIMIKO STARTUP WARNING] Database initialization encountered an issue: {exc}", flush=True)
+        traceback.print_exc()
     yield
 
 
