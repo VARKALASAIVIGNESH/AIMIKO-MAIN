@@ -12,9 +12,12 @@ from app.core.config import settings
 
 db_url = settings.database_url
 
-# Supabase / cloud providers often format the scheme as "postgres://", which SQLAlchemy 2.0 requires as "postgresql://"
+# Supabase / cloud providers format the scheme as postgres:// or postgresql://
+# In SQLAlchemy 2.0+, explicit driver specification prevents ModuleNotFoundError
 if db_url.startswith("postgres://"):
-    db_url = db_url.replace("postgres://", "postgresql://", 1)
+    db_url = db_url.replace("postgres://", "postgresql+psycopg2://", 1)
+elif db_url.startswith("postgresql://") and not db_url.startswith("postgresql+"):
+    db_url = db_url.replace("postgresql://", "postgresql+psycopg2://", 1)
 
 connect_args = {}
 engine_kwargs = {
