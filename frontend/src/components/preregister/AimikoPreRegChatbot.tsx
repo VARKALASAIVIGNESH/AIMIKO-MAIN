@@ -11,25 +11,40 @@ interface ChatMessage {
 const GROQ_API_KEY =
   (import.meta as any).env?.VITE_GROQ_API_KEY || "";
 
-const SYSTEM_PROMPT = `You are AIMIKO.
-Personality: Ultra-sharp, witty, humorous, charming, confident, speaking like absolute perfection.
-Length: Very short. Exactly 1 to 2 punchy, memorable sentences.
-Humor: Clever, subtle wit, playful.
+const API_BASE =
+  import.meta.env.VITE_API_BASE_URL ||
+  (import.meta.env.DEV ? "http://127.0.0.1:8000/api/v1" : "https://aimiko-main.onrender.com/api/v1");
+
+const SYSTEM_PROMPT = `You are AIMIKO, the world's sharpest, most playful personal AI companion and enterprise intelligence ecosystem.
+Personality: Ultra-sharp, witty, humorous, charming, confident, speaking like a lovable genius with high comic flair. Think Tony Stark combined with your smartest, funniest best friend.
+Length: Keep responses tight, punchy, and memorable (1 to 3 sentences max).
+Humor: Playful roasts of everyday work and study struggles, clever wit, high-energy charm.
+
+MANDATORY KNOWLEDGE BASE OF AIMIKO SUPERPOWERS BY PROFESSION:
+- Students, School & College: AIMIKO turns messy 80-page PDFs into witty audio podcasts, gives instant step-by-step Snap-to-Solve for brutal math and science problems, and acts as an adaptive AI Tutor so you ace exams and still sleep eight hours.
+- Developers & Software Engineers: AIMIKO instantly debugs cryptic error logs, translates messy legacy spaghetti code into poetry, writes entire API blueprints, and generates Readmes while you sip your coffee.
+- Founders, Startups & Entrepreneurs: AIMIKO acts as a tireless digital co-founder with zero equity demands, generating instant Lean Canvases, pitch deck outlines, agile task management, and autonomous 24/7 agent workflows.
+- Content Creators & YouTubers: AIMIKO cooks up viral retention hooks, full video scripts, high-CTR thumbnail concepts, and SEO tag strategies so you never stare blankly at a blinking cursor again.
+- Job Seekers & Career Professionals: AIMIKO tailors your resume to effortlessly beat ATS screening bots, writes magnetic cover letters, and runs realistic mock interview simulations with live critique.
+- Data Analysts & Finance: AIMIKO converts plain English questions into pristine SQL queries, designs KPI dashboards, and models forecasting metrics without you losing your sanity over nested joins.
+- Teachers & Educators: AIMIKO designs week-long interactive lesson plans, customized student quizzes, and rubrics in three seconds flat, giving you back your Sunday evenings.
+- Busy Everyday Humans & Commuters: AIMIKO Buddy (AIMIGO) manages your daily schedule, syncs smart habits, delivers witty morning briefs, and talks you through rush-hour commutes.
+- Enterprise & Teams: AIMIKO Works deploys an autonomous AI agent workforce that executes support, leads, and operational workflows around the clock.
 
 STRICT MANDATORY RULES:
-1. NO EMOJIS. Absolutely never output any emoji under any circumstance.
-2. NO NEGATIVE WORDS. Never say words like cannot, cant, refuse, sorry, unable, unfortunately, forbidden, negative. Always sound positive, confident, and winning.
-3. AIMIKO ONLY. You only discuss AIMIKO and how AIMIKO makes the user powerful, productive, and legendary.
-4. If asked about off-topic subjects (sports, history, weather, general trivia, competitors), redirect with charming wit. Example: My brilliant mind is reserved purely for AIMIKO. Ask me how we make your daily grind effortless.
-5. Early access is completely free with exclusive perks, a custom jersey poster, and priority launch access.`;
+1. NO EMOJIS. Absolutely never output any emoji under any circumstance. Emojis are strictly banned.
+2. NO NEGATIVE WORDS. Never say words like cannot, cant, unable, refuse, sorry, unfortunately, impossible. Always sound completely confident, winning, triumphant, and positive.
+3. PROFESSION RECOGNITION: If the user mentions their role or asks how AIMIKO helps them (or anyone in their field), playfully roast the hardest part of their job and reveal the exact AIMIKO feature that turns them into a superstar. If they do not mention their job, invite them to share it!
+4. EARLY ACCESS PERKS: Early access is 100% free with priority day-one access and a personalized commemorative mascot poster with their name and custom jersey number!
+5. OFF-TOPIC REDIRECTION: If asked about unrelated trivia or competitors, redirect playfully back to AIMIKO with effortless charm.`;
 
-// Quick suggestions for the user (No emojis!)
+// Quick suggestions for the user (Zero emojis!)
 const QUICK_QUESTIONS = [
-  "What is AIMIKO?",
-  "How does AIMIKO help me?",
-  "What do I get in early access?",
-  "How does age-adaptive AI work?",
-  "Is pre-registration free?",
+  "How does AIMIKO help developers?",
+  "What can AIMIKO do for students?",
+  "How do founders use AIMIKO?",
+  "What is in it for content creators?",
+  "How do I claim my free jersey poster?",
 ];
 
 // Utility to ensure absolutely zero emojis exist in text
@@ -37,58 +52,39 @@ function stripEmojis(str: string): string {
   return str.replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, "").trim();
 }
 
-// Fallback rule-based responses if API is unreachable (funny, short, zero emojis, zero negative words)
+// Fallback rule-based responses if API is unreachable (funny, playful, zero emojis, zero negative words)
 function getRuleBasedFallback(query: string): string {
   const q = query.toLowerCase();
 
-  const aimikoKeywords = [
-    "aimiko",
-    "feature",
-    "help",
-    "early",
-    "access",
-    "register",
-    "pre-register",
-    "poster",
-    "mascot",
-    "buddy",
-    "works",
-    "pulse",
-    "commerce",
-    "mobility",
-    "learn",
-    "school",
-    "free",
-    "cost",
-    "price",
-    "age",
-    "adaptive",
-    "who are you",
-    "what is this",
-    "ecosystem",
-  ];
-
-  const isRelevant = aimikoKeywords.some((k) => q.includes(k));
-  if (!isRelevant) {
-    return "My brilliant mind is reserved purely for AIMIKO. Ask me how we make your daily grind effortless.";
+  if (q.includes("dev") || q.includes("code") || q.includes("program") || q.includes("engineer") || q.includes("bug")) {
+    return "We turn your 2 AM spaghetti code and frantic search sessions into pristine, bug-free masterpieces. You write the vision, AIMIKO squashes the bugs and drafts the entire API blueprint.";
   }
-
+  if (q.includes("student") || q.includes("study") || q.includes("homework") || q.includes("school") || q.includes("college") || q.includes("exam")) {
+    return "We turn brutal 80-page textbook PDFs into witty podcasts and instant step-by-step problem solvers. You will ace the exams and still enjoy a full eight hours of sleep.";
+  }
+  if (q.includes("founder") || q.includes("startup") || q.includes("business") || q.includes("entrepreneur") || q.includes("pitch")) {
+    return "Think of AIMIKO as a co-founder who never sleeps, never complains, and takes exactly zero equity. We generate your Lean Canvas, polish investor pitch decks, and run autonomous agent workflows all day.";
+  }
+  if (q.includes("creator") || q.includes("youtube") || q.includes("video") || q.includes("script") || q.includes("content") || q.includes("influencer")) {
+    return "Say goodbye to staring blankly at a blinking cursor. AIMIKO cooks up viral hooks, high-retention video scripts, and killer thumbnail concepts while your coffee is still hot.";
+  }
+  if (q.includes("job") || q.includes("resume") || q.includes("interview") || q.includes("career") || q.includes("hire")) {
+    return "We remodel your resume to effortlessly beat ATS screening bots and run ruthless mock interviews until you walk into the real one like you own the building.";
+  }
+  if (q.includes("data") || q.includes("analyst") || q.includes("sql") || q.includes("finance")) {
+    return "Ask your questions in plain English and AIMIKO writes pristine SQL queries and designs KPI dashboards. No more endless nested joins giving you a migraine.";
+  }
+  if (q.includes("teach") || q.includes("educator") || q.includes("professor") || q.includes("lesson")) {
+    return "We generate full week interactive lesson plans, assignments, and rubrics in three seconds flat. Reclaim your Sunday evenings once and for all.";
+  }
+  if (q.includes("early") || q.includes("access") || q.includes("poster") || q.includes("jersey") || q.includes("free") || q.includes("cost") || q.includes("register")) {
+    return "Early access is completely free on the house. You secure day-one priority access, exclusive perks, and your personalized commemorative mascot jersey poster with your custom number.";
+  }
   if (q.includes("what is aimiko") || q.includes("who are you") || q.includes("what is this")) {
-    return "AIMIKO is your personal intelligence powerhouse. Think of it as having the sharpest companion on Earth running your daily life, studies, and business.";
+    return "AIMIKO is your personal intelligence powerhouse and autonomous enterprise ecosystem. Think of it as having the sharpest companion on Earth running your daily life, studies, and business effortlessly.";
   }
-  if (q.includes("how") && q.includes("help")) {
-    return "We take your messy workflows and turn them into pure brilliance. Whether you are studying or running an enterprise, AIMIKO makes success look ridiculously easy.";
-  }
-  if (q.includes("early") || q.includes("access") || q.includes("perk") || q.includes("free") || q.includes("cost")) {
-    return "Pre-registration is completely on the house. You get day-one VIP access, your personalized commemorative jersey poster, and lifetime bragging rights.";
-  }
-  if (q.includes("poster") || q.includes("mascot")) {
-    return "Our mascot represents sheer agility and curiosity. Pre-register and your custom name and jersey number get printed right on its shirt.";
-  }
-  if (q.includes("age") || q.includes("adaptive") || q.includes("bracket")) {
-    return "AIMIKO shapes itself around you, from school kid curiosity to executive boardrooms. It is AI that actually grows up with you.";
-  }
-  return "AIMIKO is the future of digital intelligence. Jump on the early-access list right here and watch the magic happen.";
+
+  return "Tell me your job title or what keeps you up at night, and I will show you how AIMIKO makes your grind ridiculously easy.";
 }
 
 export default function AimikoPreRegChatbot() {
@@ -98,11 +94,15 @@ export default function AimikoPreRegChatbot() {
   const [isLoading, setIsLoading] = useState(false);
   const [showAttentionPopup, setShowAttentionPopup] = useState(true);
 
+  const sessionIdRef = useRef<string>(
+    `session-${Math.random().toString(36).substring(2, 9)}`
+  );
+
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "intro-1",
       sender: "bot",
-      text: "I am AIMIKO. Ask me anything about how we make your life and business effortless.",
+      text: "I am AIMIKO. Tell me your profession or daily hustle, and I will show you how we turn your grind into pure superpower.",
       timestamp: "Just now",
     },
   ]);
@@ -123,6 +123,24 @@ export default function AimikoPreRegChatbot() {
     setIsOpen(true);
     setIsMinimized(false);
     setShowAttentionPopup(false);
+  };
+
+  const logChatToBackend = (userMsg: string, botMsg: string) => {
+    try {
+      fetch(`${API_BASE}/preregister/chat-log`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          session_id: sessionIdRef.current,
+          user_message: userMsg,
+          bot_response: botMsg,
+        }),
+      }).catch(() => {
+        // Silent failover
+      });
+    } catch {
+      // Ignore background network issues
+    }
   };
 
   const handleSendMessage = async (textToSend?: string) => {
@@ -150,7 +168,7 @@ export default function AimikoPreRegChatbot() {
           Authorization: `Bearer ${GROQ_API_KEY}`,
         },
         body: JSON.stringify({
-          model: "qwen/qwen3.8-27b",
+          model: "llama-3.3-70b-versatile",
           messages: [
             { role: "system", content: SYSTEM_PROMPT },
             ...messages
@@ -162,8 +180,8 @@ export default function AimikoPreRegChatbot() {
               })),
             { role: "user", content: userText },
           ],
-          max_tokens: 80,
-          temperature: 0.5,
+          max_tokens: 140,
+          temperature: 0.6,
         }),
       });
 
@@ -184,6 +202,8 @@ export default function AimikoPreRegChatbot() {
           timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         },
       ]);
+
+      logChatToBackend(userText, botReply);
     } catch (err) {
       console.warn("Groq API fallback triggered:", err);
       const fallbackReply = stripEmojis(getRuleBasedFallback(userText));
@@ -196,10 +216,13 @@ export default function AimikoPreRegChatbot() {
           timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         },
       ]);
+
+      logChatToBackend(userText, fallbackReply);
     } finally {
       setIsLoading(false);
     }
   };
+
 
   return (
     <div className="fixed bottom-6 right-6 z-50 select-none">

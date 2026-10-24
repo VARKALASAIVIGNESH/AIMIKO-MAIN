@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.database import get_db
 from app.core.email import send_preregistration_otp
-from app.models import PreRegistration
+from app.models import PreRegistration, PreRegistrationChat
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +34,14 @@ class VerifyOtpRequest(BaseModel):
     otp: str
 
 
+class ChatLogRequest(BaseModel):
+    session_id: Optional[str] = ""
+    user_message: str
+    bot_response: str
+
+
 class PreRegisterResponse(BaseModel):
+
     success: bool
     message: str
     is_verified: bool = False
@@ -153,7 +160,26 @@ def verify_otp(payload: VerifyOtpRequest, db: Session = Depends(get_db)):
 @router.get("/stats")
 def get_stats(db: Session = Depends(get_db)):
     verified_count = db.query(func.count(PreRegistration.id)).filter(PreRegistration.is_verified == True).scalar() or 0
+    total_chats = db.query(func.count(PreRegistrationChat.id)).scalar() or 0
     return {
         "verified_members": verified_count,
+        "total_chats": total_chats,
         "early_access_open": True,
     }
+
+
+@router.post("/chat-log")
+def log_chat(payload: ChatLogRequest, db: Session = Depends(get_db)):
+    try:
+        log_entry = PreRegistrationChat(
+            session_id=payload.session_id or "",
+            user_message=payload.user_message.strip()[:1000],
+            bot_response=payload.bot_response.strip()[:1000],
+        )
+        db.add(log_entry)
+        db.commit()
+        return {"status": "ok"}
+    except Exception as e:
+        logger.warning(f"Failed to log chat: {e}")
+        return {"status": "ignored"}
+

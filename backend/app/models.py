@@ -445,3 +445,14 @@ class PreRegistration(Base):
     created_at = Column(DateTime, default=utcnow, index=True)
     verified_at = Column(DateTime, nullable=True)
 
+
+class PreRegistrationChat(Base):
+    __tablename__ = "pre_registration_chats"
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(String(120), index=True, default="")
+    user_message = Column(Text, nullable=False)
+    bot_response = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=utcnow, index=True)
+
+
